@@ -1,0 +1,21 @@
+{
+    "name": "snowflake-sink-processed-connector",
+    "config": {
+        "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
+        "tasks.max": "1",
+        "topics": "processed_activity", 
+        "snowflake.topic2table.map": "processed_activity:USER_ACTIVITY_PROCESSED", 
+        "buffer.count.records": "10000",
+        "buffer.flush.time": "60",
+        "buffer.size.bytes": "5000000",
+        "snowflake.url.name": "mhwkfau-mf75876.snowflakecomputing.com", 
+        "snowflake.user.name": "KAFKA_SINK_PROCESSED_USER", 
+        "snowflake.private.key.passphrase": "T3mp.4ccount", 
+        "snowflake.private.key": "MIIFNTBfBgkqhkiG9w0BBQ0wUjAxBgkqhkiG9w0BBQwwJAQQeMKycBTxUfqisx4OHaMTbAICCAAwDAYIKoZIhvcNAgkFADAdBglghkgBZQMEASoEEEm0Wn1DCkD75LAqWtB4fQIEggTQTpNmXxDNc6jG+5v7DEUpSgqjI3yxPcLSOnKWGTeZgYfzBB4zG3CT06H40O+haM4jDEcTnTkJLOtZjzyff7CXf4prNqNn0nWDsgqOpQ3rFgGRAgnlxlgIvjDDbgO453KNxOXhHNOUJ8dPfQgjTvoP6Cx+c6aORvZ6V0RQvLhewbijng582XK/GCblwuB7zA/XWYajKvf6rfcQ6EymG0unPkCyfXRFA5UK1CublVUf93ju2l0u3b81yBuwipk26fksnd1Z++uwDXQ5hqXV9VGNQAMfNbqSRIS12DFJMUBdkoYPJ46n3dU5UHqPwcTT0ROsGY7yx1evTexldVIoR8wraqCFD/xbhrZCdGX6qYE5ACdvbytL1YTinvlEEtPW3FhROz79/SJkI1bRkJLSC6PuU2yreiyQsH9NeGNrBRjrCFQJDEbI0OoMEr7s5pusy+1TXAq4qKaAN9wofCLUSKvtYIHGiZkhe/cOYcjtsp9gUzg0CLeUlrzP2vzc7LHM4aw2fTSxTk/EVhfgJoZ7ZRvr/OjDdSOHwiV+IwDfBmp9AWswixQhcNKGXk4pcURzEhPqz1KI88mG5yAPgxcFkfSR1/q/cnjSIkrgBNOXnQZfn4UXyqMrkbEM3dpyR7WX8UnKqCDbTF+Jl8z0089l+8tdTTUfniFvjtoQhRQ9pDfeLDPiBU8fwlh+1e4/8GPP9w97f11lUZOfqnsKp/dY0M5Cx6LSMVfLTwHx1NnhGEnD9BthC84z8wEMRzF8I+7wPwHzYF93GpumvWIFy9OCI51+FpnCitJqcVYCuJyVMGxyNWvH795yBRY261OcxG0AublA2lJ5zbVb6BsSZSWQ3Nqnd+WJTdcXMKz5tNUCZ9nBPBq79RSz+YF8eaTldG/68KXOy09tsRanwkwr9klsyYsN9I20QVi29qqWVppw8GDZNYqw8G99Y8M/kurPQSUfmM/J692UZSrpHf0qyFlaUBCV+a/KfDCF1aRVnoBqqXsTIOi7mhRxEO+15KSWbUayFLMPGNUrhkd3oPFpmwUkx44fdyG2rr373/0Exq/Zg6VqnlDTTVACkbLewKlWiAnJEPQDIZBgYqvxNbXr9bhbkvtTMx8Onp/BcU62h5aQuIYQo50zpxHeMtmKUAqsghp4bPl4EXY+sHaq983nIgQtm7pOSo37/qZeb8nc/3jUIN+BmgkelXaFB7lQvYuOroL/05KnjLdFGR9S9y1ONn2/oiRHO9DlbrcqX3qtDCvdcF4/Wn/+NsFwgSerO+bd7y6Cjne/RIv6v8X32FiHhyi72z9hDmBJTrzUAsG8ISsbfRTrBdPYo7i4jH7CvHvdljfec2FRZp+JhrMKQHRsDTHdae5otG/aDdx8xtdQdUT79+f5zU7Cge4cxY9QIyjS05rvRChgwhOUAL0I3g+4rg4eOa7B/FiLn0DwYkQcgAytbL8cD61IXFuRdjJC8gFpuNqGD3svAMxOcHpyJepV8slSqaS2qOOw5VQ9W7cUfqR7des+Gs6stvmW7aJNlDcGZr2DMtdWcA4AC8u9u7INnOqFzcYuJXzf1oW1EwbGEN0MIxTE6MWSf2dFAYvFcyxnp4PctKL7ls517Zwq/SYZUQCVmBb6JudjzIDP+4cS5N9PLem3xZc=",
+        "snowflake.database.name": "ACTIVITY_DB", 
+        "snowflake.schema.name": "PROCESSED_DATA", 
+        "snowflake.warehouse.name": "KAFKA_CONNECT_WH", 
+        "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+        "value.converter": "com.snowflake.kafka.connector.records.SnowflakeJsonConverter"
+    }
+}
