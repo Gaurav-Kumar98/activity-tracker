@@ -23,28 +23,6 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
-  # ksqldb-server:
-  #   image: confluentinc/cp-ksqldb-server:7.4.0
-  #   depends_on:
-  #     - kafka
-  #   ports:
-  #     - "8088:8088"
-  #   environment:
-  #     KSQL_CONFIG_DIR: "/etc/ksql"
-  #     KSQL_BOOTSTRAP_SERVERS: "kafka:29092"
-  #     KSQL_LISTENERS: "http://0.0.0.0:8088"
-  #     KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
-  #     KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
-
-  # ksqldb-cli:
-  #   image: confluentinc/cp-ksqldb-cli:7.4.0
-  #   depends_on:
-  #     - ksqldb-server
-  #   volumes:
-  #     - ./kafka-streams:/scripts
-  #   entrypoint: /bin/sh
-  #   tty: true
-
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.4.0
     depends_on:
@@ -108,27 +86,24 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
 
-  # Database
-  # postgres:
-  #   image: timescale/timescaledb:latest-pg14
-  #   ports:
-  #     - "5432:5432"
-  #   environment:
-  #     POSTGRES_DB: sensordb
-  #     POSTGRES_USER: sensoruser
-  #     POSTGRES_PASSWORD: sensorpass
-  #   volumes:
-  #     - postgres-data:/var/lib/postgresql/data
-
   # Visualization
   # grafana:
   #   image: grafana/grafana:latest
-  #   depends_on:
-  #     - postgres
   #   ports:
   #     - "3000:3000"
+  #   environment:
+  #     GF_INSTALL_PLUGINS: grafana-snowflake-datasource
+  #     GF_SECURITY_ADMIN_USER: admin
+  #     GF_SECURITY_ADMIN_PASSWORD: admin
+  #     GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/activity_monitoring_dashboard.json
+  #     # Additional configuration to fix the issues
+  #     GF_FEATURE_TOGGLES_ENABLE: publicDashboards
   #   volumes:
+  #     - ./docker/grafana-dashboards:/etc/grafana/dashboards
+  #     - ./docker/grafana-provisioning:/etc/grafana/provisioning
   #     - grafana-data:/var/lib/grafana
+  #   depends_on:
+  #     - kafka
 
   spark:
     image: bitnami/spark:3.3.0
@@ -148,11 +123,5 @@ services:
       --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.3.0
       /app/activity_detection.py
 
-# volumes:
-  # postgres-data:
-  # grafana-data:
-  # No changes needed below this line if there were no other volumes.
-  # If other volumes exist, keep them. If postgres-data and grafana-data
-  # are the only ones, this section can be left empty or with comments.
-  # For this example, I am commenting them out.
-  # If you have other volumes defined, ensure they are not removed.
+volumes:
+  grafana-data:

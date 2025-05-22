@@ -95,3 +95,36 @@ GRANT ROLE KAFKA_CONNECTOR_ROLE TO ROLE ACCOUNTADMIN; -- Uncomment if needed
 ALTER USER KAFKA_SINK_USER SET RSA_PUBLIC_KEY = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvJCXzQHmmnnPXpotvMi2zXD7G44UcvbuhYswlRdcVwjSuX9E3A24cM+jrVqcHLZYZ2YcHkbNjrAN4Spx7wXp1oKZIrE9wgQtTFB/tH5hsWcJR+pzut0IMZkNRLxp8JGukyAlqmq/2XIgzcHzR1xhyI88+CI3RyGvYicp9MlNuI5fA8IDRyjvZTtyNA16BZwfb1+RgnVwznMRP3qvSnLn2IzNiMgdHuAjJcuARtfOH395hQJDsEuIMd8R8TFTA3Z0m/pxNjgDZQYgXSy49DaXgucPv9esvU6M/JWHHi52LVttn6oEsikpX7WQxm8INja4eyjS+2sOwl8DFeuusShfIwIDAQAB';
 
 ALTER USER KAFKA_SINK_PROCESSED_USER SET RSA_PUBLIC_KEY = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvJCXzQHmmnnPXpotvMi2zXD7G44UcvbuhYswlRdcVwjSuX9E3A24cM+jrVqcHLZYZ2YcHkbNjrAN4Spx7wXp1oKZIrE9wgQtTFB/tH5hsWcJR+pzut0IMZkNRLxp8JGukyAlqmq/2XIgzcHzR1xhyI88+CI3RyGvYicp9MlNuI5fA8IDRyjvZTtyNA16BZwfb1+RgnVwznMRP3qvSnLn2IzNiMgdHuAjJcuARtfOH395hQJDsEuIMd8R8TFTA3Z0m/pxNjgDZQYgXSy49DaXgucPv9esvU6M/JWHHi52LVttn6oEsikpX7WQxm8INja4eyjS+2sOwl8DFeuusShfIwIDAQAB';
+
+-- 1. Create a role for Grafana
+CREATE ROLE grafana_role;
+
+-- 3. Grant the role usage on the warehouse
+GRANT USAGE ON WAREHOUSE kafka_connect_wh TO ROLE grafana_role;
+
+-- 4. Grant the role usage on your target database
+-- Replace 'YOUR_TARGET_DATABASE' with your actual database name
+GRANT USAGE ON DATABASE activity_db TO ROLE grafana_role;
+
+-- 5. Grant the role usage on your target schema
+-- Replace 'YOUR_TARGET_DATABASE' and 'YOUR_TARGET_SCHEMA'
+GRANT USAGE ON SCHEMA activity_db.processed_data TO ROLE grafana_role;
+
+-- 6. Grant the role select permissions on tables/views in the schema
+-- This grants select on all tables and views. Adjust if you need more granular control.
+GRANT SELECT ON ALL TABLES IN SCHEMA activity_db.processed_data TO ROLE grafana_role;
+GRANT SELECT ON ALL VIEWS IN SCHEMA activity_db.processed_data TO ROLE grafana_role;
+
+DROP USER IF EXISTS grafana_user;
+
+-- 7. Create a user for Grafana
+CREATE USER grafana_user
+  PASSWORD = 'T3mp.4ccount' -- IMPORTANT: Use a strong, unique password
+  LOGIN_NAME = 'grafana_user' -- Ensure this is unique
+  MUST_CHANGE_PASSWORD = FALSE
+  DEFAULT_ROLE = grafana_role
+  DEFAULT_WAREHOUSE = kafka_connect_wh
+  DEFAULT_NAMESPACE = 'activity_db.processed_data'; -- Optional: sets default db and schema
+
+-- 8. Grant the role to the user
+GRANT ROLE grafana_role TO USER grafana_user;

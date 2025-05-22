@@ -1,5 +1,5 @@
-./docker
-./snowflake-keys
-./.venv
-./checkpoint
-./docs
+docker/
+snowflake-keys/
+.venv/
+checkpoint/
+docs/

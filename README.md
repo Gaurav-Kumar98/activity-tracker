@@ -2,23 +2,23 @@
 
 ## Overview
 
-This project implements a real-time activity tracking system. Sensor data (specifically accelerometer readings) is collected from a mobile device, sent to a Flask API, processed using Spark Streaming to detect user activity (e.g., stationary, walking, running), and then stored in Snowflake. The processed data can then be visualized using Grafana.
+This project implements a real-time activity tracking system. Sensor data (specifically accelerometer readings) is collected from a mobile device, sent to a Flask API, processed using Spark Streaming to detect user activity (e.g., stationary, walking, running), and then stored in Snowflake. The processed data can then be visualized using Grafana Cloud.
 
 ## Architecture
 
 The data flows through the system as follows:
 
-`[Mobile Device Sensor] -> [Flask API] -> [Kafka (raw_sensor_data topic)] -> [Spark Streaming] -> [Kafka (processed_activity topic)] -> [Kafka Connect (Snowflake Sink)] -> [Snowflake] -> [Grafana]`
+`[Mobile Device Sensor] -> [Flask API (Local)] -> [Kafka (raw_sensor_data topic)] -> [Spark Streaming] -> [Kafka (processed_activity topic)] -> [Kafka Connect (Snowflake Sink)] -> [Snowflake] -> [Grafana Cloud]`
 
 ## Technology Stack
 
-*   **Data Ingestion:** Flask (Python)
+*   **Data Ingestion:** Flask (Python, running locally)
 *   **Message Broker:** Apache Kafka
 *   **Real-time Processing:** Apache Spark Streaming (PySpark)
 *   **Data Storage:** Snowflake
 *   **Data Sink:** Kafka Connect with Snowflake Connector
-*   **Visualization:** Grafana
-*   **Containerization:** Docker, Docker Compose
+*   **Visualization:** Grafana Cloud
+*   **Containerization:** Docker, Docker Compose (for Kafka, Spark, and Kafka Connect)
 
 ## Project Structure
 
@@ -27,47 +27,46 @@ The data flows through the system as follows:
 ├── spark-streaming/
 │   └── activity_detection.py  # Spark Streaming job for activity classification
 ├── flaskserver/
-│   └── app.py                 # Flask API to receive sensor data
+│   └── app.py                 # Flask API to receive sensor data (runs locally)
 ├── connector-configs/
 │   ├── snowflake-sink-raw-config.json      # Kafka Connect config for raw data to Snowflake
 │   └── snowflake-sink-processed-config.json # Kafka Connect config for processed data to Snowflake
-├── snowflake-keys/
-│   └── rsa_key.p8             # Private key for Snowflake connection (ensure this is in .gitignore)
+├── docker/
+│   └── grafana-dashboards/
+│       └── activity_monitoring_dashboard.json  # Pre-configured Grafana dashboard
 ├── docker-compose.yml         # Docker Compose configuration
-├── README.md                  # This file
-└── (other configuration files like .env if used)
+└── README.md                  # This file
 ```
 
 ## Setup and Installation
 
 1.  **Prerequisites:**
-    *   Docker and Docker Compose installed.
+    *   Docker and Docker Compose installed for running Kafka, Spark, and Kafka Connect.
+    *   Python environment for running the Flask server locally.
     *   Snowflake account and database (`ACTIVITY_DB`) created.
-    *   Snowflake user with appropriate permissions and RSA key pair generated. Place the private key (`rsa_key.p8`) in the `snowflake-keys/` directory.
-    *   Update `.env` (you might need to create this file) with your Snowflake connection details:
-        ```env
-        SNOWFLAKE_USER=your_user
-        SNOWFLAKE_PRIVATE_KEY_PATH=/path/in/container/to/rsa_key.p8 
-        SNOWFLAKE_ACCOUNT=your_account_identifier
-        SNOWFLAKE_WAREHOUSE=your_warehouse
-        SNOWFLAKE_DATABASE=ACTIVITY_DB
-        SNOWFLAKE_RAW_SCHEMA=RAW_DATA
-        SNOWFLAKE_PROCESSED_SCHEMA=PROCESSED_DATA
-        ```
-        *Note: `SNOWFLAKE_PRIVATE_KEY_PATH` in the `.env` should correspond to the path *inside* the Kafka Connect container as mounted in `docker-compose.yml`.*
+    *   Snowflake user with appropriate permissions and RSA key pair generated.
+    *   Grafana Cloud account with Snowflake data source configured.
 
-2.  **Environment Variables for Kafka Connect:**
-    The `docker-compose.yml` file should mount the `snowflake-keys` directory and pass necessary environment variables to the Kafka Connect service for Snowflake connectivity. These are typically set in the `environment` section of the `connect` service in `docker-compose.yml`, referencing the `.env` file.
+2.  **Snowflake Configuration:**
+    *   Snowflake private key is embedded directly within the Kafka Connect configuration JSON files in the `connector-configs/` directory.
+    *   Ensure your Snowflake user has the necessary permissions to access the specified database and schemas.
 
 3.  **Build and Run Docker Containers:**
     ```bash
     docker-compose up --build -d
     ```
 
+4.  **Start Flask Server Locally:**
+    ```bash
+    cd flaskserver
+    python app.py
+    ```
+
 ## Running the Application
 
-1.  Start all services using `docker-compose up --build -d`.
-2.  Send sensor data to the Flask API endpoint (typically `http://localhost:5000/data` if running locally mapped). The expected payload format for accelerometer data should include `sensor_reading["name"]` as `"accelerometer"` and a `values` array `[x, y, z]`.
+1.  Start the Kafka, Spark, and Kafka Connect services using `docker-compose up --build -d`.
+2.  Start the Flask server locally.
+3.  Send sensor data to the Flask API endpoint (typically `http://localhost:5000/sensor-data` if running locally). The expected payload format for accelerometer data should include `sensor_reading["name"]` as `"accelerometer"` and a `values` array `[x, y, z]`.
     Example:
     ```json
     {
@@ -83,18 +82,18 @@ The data flows through the system as follows:
       ]
     }
     ```
-3.  Monitor logs for each service:
+4.  Monitor logs for each service:
     ```bash
     docker-compose logs -f spark
     docker-compose logs -f connect
     docker-compose logs -f kafka
-    docker-compose logs -f flaskserver
     ```
+5.  View logs for the Flask server in its terminal window.
 
 ## Data Flow
 
 1.  **Raw Data:**
-    *   The Flask API (`flaskserver/app.py`) receives sensor data and publishes it to the `raw_sensor_data` Kafka topic.
+    *   The Flask API (`flaskserver/app.py`) running locally receives sensor data and publishes it to the `raw_sensor_data` Kafka topic.
     *   Kafka Connect, using `connector-configs/snowflake-sink-raw-config.json`, sinks messages from `raw_sensor_data` to the `ACTIVITY_RECORDS` table in the `RAW_DATA` schema of the `ACTIVITY_DB` Snowflake database.
 
 2.  **Processed Data:**
@@ -121,14 +120,18 @@ The Spark job uses checkpointing. If you change the schema of the data being pro
 
 ## Visualization
 
-*   Grafana can be configured with Snowflake as a data source.
-*   Create dashboards in Grafana to visualize the data from the `USER_ACTIVITY_PROCESSED` table (and potentially `ACTIVITY_RECORDS`) in Snowflake.
-*   Example visualizations could include:
-    *   Time series of activity types.
-    *   Count of activities over time.
-    *   Magnitude or standard deviation of magnitude values.
+*   Configure Grafana Cloud with Snowflake as a data source.
+*   Create dashboards in Grafana Cloud to visualize the data from the `USER_ACTIVITY_PROCESSED` table (and potentially `ACTIVITY_RECORDS`) in Snowflake.
+*   A pre-configured dashboard is available in the `docker/grafana-dashboards/activity_monitoring_dashboard.json` file, which can be imported directly into Grafana Cloud.
+*   The dashboard includes:
+    *   Current activity state display
+    *   Confidence level gauge
+    *   Average magnitude visualizations
+    *   Activity timeline
+    *   Activity distribution pie chart
+    *   Recent activity records table
 
 ---
 
 This README provides a comprehensive guide to the project. Remember to keep it updated as the project evolves.
-Ensure that `snowflake-keys/rsa_key.p8` and any files containing sensitive credentials (like a `.env` file) are added to your `.gitignore` file.
+Ensure that any files containing sensitive credentials are properly secured and not committed to version control.
