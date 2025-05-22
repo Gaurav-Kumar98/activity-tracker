@@ -135,3 +135,10 @@ The Spark job uses checkpointing. If you change the schema of the data being pro
 
 This README provides a comprehensive guide to the project. Remember to keep it updated as the project evolves.
 Ensure that any files containing sensitive credentials are properly secured and not committed to version control.
+
+## Related Articles
+
+For more detailed insights and explanations about this project:
+
+* [Medium Article: From My Phone to the Cloud: Building a Real-Time Activity Tracker with Kafka, Spark, and Snowflake](https://medium.com/@gk0415439/from-my-phone-to-the-cloud-building-a-real-time-activity-tracker-with-kafka-spark-and-snowflake-4e528d0e83a7)
+* [LinkedIn Article: Project Deep Dive: Architecting and Implementing a Streaming Data Pipeline with Kafka, Spark, Snowflake, and Grafana](https://www.linkedin.com/pulse/project-deep-dive-architecting-implementing-streaming-gaurav-kumar-a0w7c)
